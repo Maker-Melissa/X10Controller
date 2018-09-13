@@ -1,4 +1,4 @@
-# X10Controller
+# X-10 Controller
 X-10 Controller Interface for the FireCracker CM17a Module
 
 ## Description
