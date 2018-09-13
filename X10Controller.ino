@@ -37,12 +37,16 @@
 // MQTT
 #include <MQTTClient.h>
 
-#define RTS_PIN 14  // DB9 Pin 7
-#define DTR_PIN 12  // DB9 Pin 4
 #define BIT_DELAY 1
 
 // Initialize the OLED Display
 U8G2_SSD1306_128X64_NONAME_F_SW_I2C u8g2(U8G2_R0, /* clock=*/ SCL, /* data=*/ SDA, /* reset=*/ U8X8_PIN_NONE);
+
+/* DO NOT CHANGE ANY SETTINGS ABOVE THIS LINE */
+
+/* Serial Pin Settings */
+#define RTS_PIN 14  // DB9 Pin 7
+#define DTR_PIN 12  // DB9 Pin 4
 
 /* WIFI Settings */
 const char* ssid = "WiFi SSID";
@@ -65,6 +69,13 @@ const char* update_password = "password";
 const char* mqttServer = "192.168.11.6";
 const char* subscribeTopic = "MySmartHome/utilities/X10Controller";
 const char* mqttDeviceID = "X10Controller1"; 
+
+/* Time in seconds until screen is cleared. Set to 0 to disable. */
+int screenClearTimeout = 5;
+
+/* DO NOT CHANGE ANY SETTINGS BELOW THIS LINE */
+
+unsigned long millisSinceLastEvent = 0;
 
 // Web Server 
 ESP8266WebServer httpServer(80);
@@ -99,10 +110,15 @@ void loop()
   delay(10);
   
   httpServer.handleClient();
+
+  if (screenClearTimeout > 0 && millis() - millisSinceLastEvent > screenClearTimeout * 1000) {
+    // Clear the screen
+    startOled();
+    outputOled();
+  }
 }
 
 void connectWifi() {
-  printMessage("Waiting 10 Seconds...");
   delay(10);
 
   startOled();
@@ -158,6 +174,7 @@ void connectMQTT() {
   
   // ... and subscribe
   client.subscribe(subscribeTopic);
+  millisSinceLastEvent = millis();
 }
 
 void messageReceived(String &topic, String &payload) {
@@ -225,6 +242,7 @@ void messageReceived(String &topic, String &payload) {
   } else {
     printMessage("Error: Bad Format");
   }
+  millisSinceLastEvent = millis();
 }
 
 void startOled() {
