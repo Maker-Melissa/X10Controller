@@ -4,6 +4,16 @@ X-10 Controller Interface for the FireCracker CM17a Module
 ## Description
 This is designed to run on an ESP8266. I currently have it running on an AdaFruit Feather Huzzah with a 0.96" OLED Display. It starts by connecting to WiFi and then to the specified MQTT Server and awaits commands. You can test it out by running MQTT.Fx for the Mac or Windows or whatever your favorite client is. After launching, click the ear and make sure the IP Address of your MQTT server is in the Broker Address field and the Broker Port is 1883. Then connect to the server, use the SubScribe Topic you specified in the firmware file and post a message.
 
+## Required Libraries
+In order to compile successfully, there are a few additional required libraries to be added with the Arduino Library Manager.
+* U8g2
+* MQTT by Joel Gaehwiler
+* ESP8266mDNS
+* ESP8266WebServer
+* ESP8266WiFi
+* ESP8266HTTPUpdateServer
+
+
 ## MQTT Message Format
 For the message, it should be in the following format in all capital letters:
 
