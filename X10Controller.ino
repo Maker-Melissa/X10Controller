@@ -102,6 +102,7 @@ void loop()
 }
 
 void connectWifi() {
+  printMessage("Waiting 10 Seconds...");
   delay(10);
 
   startOled();
@@ -167,7 +168,7 @@ void messageReceived(String &topic, String &payload) {
   int tokenEnd = 0;
   
   HouseCode houseCode;
-  int deviceId;
+  int deviceId = 0;
   CommandCode command;
 
   // Separate the message into tokens
@@ -198,74 +199,23 @@ void messageReceived(String &topic, String &payload) {
     error = 1;
   }
 
-  if (tokens[1] == "A") {
-    houseCode = hcA;
-  } else if (tokens[1] == "B") {
-    houseCode = hcB;
-  } else if (tokens[1] == "C") {
-    houseCode = hcC;
-  } else if (tokens[1] == "D") {
-    houseCode = hcD;
-  } else if (tokens[1] == "E") {
-    houseCode = hcE;
-  } else if (tokens[1] == "F") {
-    houseCode = hcF;
-  } else if (tokens[1] == "G") {
-    houseCode = hcG;
-  } else if (tokens[1] == "H") {
-    houseCode = hcH;
-  } else if (tokens[1] == "I") {
-    houseCode = hcI;
-  } else if (tokens[1] == "J") {
-    houseCode = hcJ;
-  } else if (tokens[1] == "K") {
-    houseCode = hcK;
-  } else if (tokens[1] == "L") {
-    houseCode = hcL;
-  } else if (tokens[1] == "M") {
-    houseCode = hcM;
-  } else if (tokens[1] == "N") {
-    houseCode = hcN;
-  } else if (tokens[1] == "O") {
-    houseCode = hcO;
-  } else if (tokens[1] == "P") {
-    houseCode = hcP;
+  char houseLetter = tokens[1].c_str()[0];
+  if (houseLetter >= 'A' && houseLetter <= 'P') {
+    houseCode = (HouseCode)(houseLetter - 'A');
   } else {
     error = 1;
   }
-
-  if (tokens[2] == "1") {
-    deviceId = 1;
-  } else if (tokens[2] == "2") {
-    deviceId = 2;
-  } else if (tokens[2] == "3") {
-    deviceId = 3;
-  } else if (tokens[2] == "4") {
-    deviceId = 4;
-  } else if (tokens[2] == "5") {
-    deviceId = 5;
-  } else if (tokens[2] == "6") {
-    deviceId = 6;
-  } else if (tokens[2] == "7") {
-    deviceId = 7;
-  } else if (tokens[2] == "8") {
-    deviceId = 8;
-  } else if (tokens[2] == "9") {
-    deviceId = 9;
-  } else if (tokens[2] == "10") {
-    deviceId = 10;
-  } else if (tokens[2] == "11") {
-    deviceId = 11;
-  } else if (tokens[2] == "12") {
-    deviceId = 12;
-  } else if (tokens[2] == "13") {
-    deviceId = 13;
-  } else if (tokens[2] == "14") {
-    deviceId = 14;
-  } else if (tokens[2] == "15") {
-    deviceId = 15;
-  } else if (tokens[2] == "16") {
-    deviceId = 16;
+  
+  if (tokens[2].toInt() >= 1 && tokens[2].toInt() <= 16) {
+    deviceId = tokens[2].toInt();
+  } else if (tokens[2] == "ALL" && command == cmdOn) {
+    command = cmdAllOn;
+  } else if (tokens[2] == "ALL" && command == cmdOff) {
+    command = cmdAllOff;
+  } else if (tokens[2] == "LAMPS" && command == cmdOn) {
+    command = cmdLampsOn;
+  } else if (tokens[2] == "LAMPS" && command == cmdOff) {
+    command = cmdLampsOff;
   } else {
     error = 1;
   }
@@ -299,9 +249,10 @@ void printMessage(const char *s)
 void sendCommand(HouseCode houseCode, int deviceId, CommandCode command) {
   u8g2.clearBuffer();          // clear the internal memory
   u8g2.setFont(u8g2_font_ncenB08_tr); // choose a suitable font
-  u8g2.setCursor(30, 20);
+  u8g2.setCursor(30, 10);
   
   u8g2.print("Sending ");
+  u8g2.setCursor(30, 25);
   if (command == cmdOn) {
     u8g2.print("ON");
   } else if (command == cmdOff) {
@@ -310,21 +261,30 @@ void sendCommand(HouseCode houseCode, int deviceId, CommandCode command) {
     u8g2.print("BRIGHT");
   } else if (command == cmdDim) {
     u8g2.print("DIM");
+  } else if (command == cmdAllOn) {
+    u8g2.print("ALL ON");
+  } else if (command == cmdAllOff) {
+    u8g2.print("ALL OFF");
+  } else if (command == cmdLampsOn) {
+    u8g2.print("LAMPS ON");
+  } else if (command == cmdLampsOff) {
+    u8g2.print("LAMPS OFF");
   } else {
     u8g2.print("UNKNOWN");
   }
   
-  u8g2.setCursor(30, 35);
+  u8g2.setCursor(30, 40);
   u8g2.print("House: ");
   char houseLetter = 'A' + houseCode;
   u8g2.print(houseLetter);
 
-  u8g2.setCursor(30, 50);
-  u8g2.print("Device: ");
-  u8g2.print(deviceId);
+  if (deviceId > 0) {
+    u8g2.setCursor(30, 55);
+    u8g2.print("Device: ");
+    u8g2.print(deviceId);
+  }
 
   u8g2.sendBuffer();          // transfer internal memory to the display
 
   X10.sendCmd(houseCode, deviceId, command);
 }
-

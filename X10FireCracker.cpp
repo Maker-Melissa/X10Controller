@@ -1,25 +1,27 @@
-/* Arduino Interface to the CM17A Wireless X10 dongle. BroHogan 7/19/08
-* Arduino Library Conversion by DaveK AC0KG
-* Updated to Arduino 1.8.5 and Additional Commands added by Melissa LeBlanc-Williams
-*
-* The CM17A gets it power and data using only the RTS, CTS, & Gnd lines.
-* A MAX232 is not req. (0/+5V work OK) If MAX232 IS used reverse all HIGHs & LOWS
-* Signal      RTS DTR        Standby | '1' | Wait | '0' | Wait | '1' | Wait...
-* Reset        0   0         _____________________       _____________________
-* Logical '1'  1   0   RTS _|                     |_____|
-* Logical '0'  0   1         ________       ___________________       ________
-* Standby      1   1   DTR _|        |_____|                   |_____|
-*
-* MINIMUM time for the '1', '0' and 'Wait' states is 0.5ms.
-*
-* At least one signal must be high to keep CM17A powered while transmitting.
-*
-* Each xmit is 40 bits -> "Header" 16 bits,  "Data" 16 bits, "Footer" 8 bits
-*
-* CONNECTION: RTS -> DB9 pin 7  
-*             DTR -> DB9 pin 4 
-*             Gnd -> DB9 pin 5
-*/
+/* 
+ * Arduino Interface to the CM17A Wireless X10 dongle. BroHogan 7/19/08
+ * Arduino Library Conversion by DaveK AC0KG
+ * Updated to Compile With Arduino 1.8.5 by Melissa LeBlanc-Williams
+ * Additional Commands added by Melissa LeBlanc-Williams
+ *
+ * The CM17A gets it power and data using only the RTS, CTS, & Gnd lines.
+ * A MAX232 is not req. (0/+5V work OK) If MAX232 IS used reverse all HIGHs & LOWS
+ * Signal      RTS DTR        Standby | '1' | Wait | '0' | Wait | '1' | Wait...
+ * Reset        0   0         _____________________       _____________________
+ * Logical '1'  1   0   RTS _|                     |_____|
+ * Logical '0'  0   1         ________       ___________________       ________
+ * Standby      1   1   DTR _|        |_____|                   |_____|
+ *
+ * MINIMUM time for the '1', '0' and 'Wait' states is 0.5ms.
+ *
+ * At least one signal must be high to keep CM17A powered while transmitting.
+ *
+ * Each xmit is 40 bits -> "Header" 16 bits,  "Data" 16 bits, "Footer" 8 bits
+ *
+ * CONNECTION: RTS -> DB9 pin 7  
+ *             DTR -> DB9 pin 4 
+ *             Gnd -> DB9 pin 5
+ */
 
 #include <Arduino.h>
 
@@ -80,10 +82,10 @@ uint16_t cmndCode[] PROGMEM = {
   0x0020,  // cmdOff
   0x0088,  // 20% cmdBright (0x00A8=5%)
   0x0098,  // 20% cmdDim    (0x00B8=5%)
-    0x0080,  // cmdAllOff
-    0x0091,  // cmdAllOn
-    0x0084,  // cmdLampsOff
-    0x0094,  // cmdLampsOn
+  0x0080,  // cmdAllOff
+  0x0091,  // cmdAllOn
+  0x0084,  // cmdLampsOff
+  0x0094,  // cmdLampsOn
 };
 
 
@@ -107,15 +109,15 @@ void X10FireCracker::sendCmd(HouseCode house, int device, CommandCode cmnd)
   byte messageBuff[5];
 
   // Build message by ORing the parts together. No device if Bright or Dim,
-  // the bright and dim codes operate on the last-addressed device
-  if ( (cmnd == cmdOn) | (cmnd == cmdOff) )
-  {
-    dataBuff =  pgm_read_word_near( houseCode  + house      )
-              | pgm_read_word_near( deviceCode + (device-1) ) 
-          | pgm_read_word_near( cmndCode   + cmnd       );
+  // the bright and dim codes operate on the last-addressed device.
+  // Also no device for addressing All
+  if ((cmnd == cmdOn) | (cmnd == cmdOff)) {
+    dataBuff =  pgm_read_word_near(houseCode  + house     )
+              | pgm_read_word_near(deviceCode + (device-1)) 
+              | pgm_read_word_near(cmndCode   + cmnd      );
   } else { 
-    dataBuff =  pgm_read_word_near( houseCode  + house ) 
-              | pgm_read_word_near( cmndCode   + cmnd  );
+    dataBuff =  pgm_read_word_near(houseCode  + house) 
+              | pgm_read_word_near(cmndCode   + cmnd );
   }
 
   // Build a string for the whole message 
@@ -134,10 +136,9 @@ void X10FireCracker::sendCmd(HouseCode house, int device, CommandCode cmnd)
   digitalWrite(RTS_pin, HIGH);
   delay(35);                   // need extra time for it to settle
 
-  for (byte i=0; i<5; i++){
-    for( byte mask = 0x80; mask; mask >>=1 )
-    {
-      if( mask & messageBuff[i] ) 
+  for  (byte i = 0; i < 5; i++) {
+    for (byte mask = 0x80; mask; mask >>= 1) {
+      if (mask & messageBuff[i]) 
         digitalWrite(DTR_pin, LOW);   // 1 = RTS HIGH/DTR-LOW
       else 
         digitalWrite(RTS_pin, LOW);   // 0 = DTR-HIGH/RTS-LOW
@@ -150,4 +151,3 @@ void X10FireCracker::sendCmd(HouseCode house, int device, CommandCode cmnd)
   }
   delay(1000);                           // wait required before next xmit
 }
-
