@@ -13,8 +13,16 @@ In order to compile successfully, there are a few additional required libraries 
 * ESP8266WiFi
 * ESP8266HTTPUpdateServer
 
+## Wiring
+
+![X10Controller_breadboard](Fritzing/X10Controller_breadboard.jpg)
+
+## Schematic
+
+![X10Controller_schematic](Fritzing/X10Controller_schematic.jpg)
 
 ## MQTT Message Format
+
 For the message, it should be in the following format in all capital letters:
 
 `COMMAND-HOUSE-DEVICE`
